@@ -1,10 +1,10 @@
 ## Biny
 
 [![license](http://img.shields.io/badge/license-BSD3-blue.svg?style=flat)](https://github.com/tencent/biny/blob/master/LICENSE.TXT)
-[![Release Version](https://img.shields.io/badge/release-2.7.6-red.svg)](https://github.com/tencent/biny/releases)
+[![Release Version](https://img.shields.io/badge/release-2.7.12-red.svg)](https://github.com/tencent/biny/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/tencent/biny/pulls)
 
-Biny是一款高性能的超轻量级PHP框架
+Biny是一款高性能的轻量级PHP框架
 
 遵循 MVC 模式，用于快速开发现代 Web 应用程序
 
@@ -42,12 +42,14 @@ Supports Form validation and supports event triggering mechanisms
 
 Supports browser side debugging, rapid positioning problems and performance bottlenecks
 
-With SQL anti injection, HTML automatic, anti XSS and other characteristics
+With SQL anti injection, HTML automatic anti XSS and other characteristics
 
 
 ## 使用文档 documents
 
 Wiki URL：[http://www.billge.cc](http://www.billge.cc)
+
+English Wiki URL：[http://www.billge.cc?lang=en](http://www.billge.cc?lang=en)
 
 GitHub URL：[https://github.com/Tencent/Biny](https://github.com/Tencent/Biny)
 

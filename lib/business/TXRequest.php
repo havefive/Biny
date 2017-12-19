@@ -223,12 +223,16 @@ class TXRequest {
     /**
      * 获取模块
      * @param bool $action
-     * @return TXAction | string
+     * @return TXAction|TXSingleDAO|mixed
+     * @throws TXException
      */
     public function getModule($action=false)
     {
         if ($action){
             if (null === $this->action){
+                if (!preg_match("/^[\\w_]+$/", $this->module)){
+                    throw new TXException(2001, $this->module."Action");
+                }
                 $this->action = TXFactory::create($this->module."Action");
             }
             return $this->action;
@@ -247,7 +251,7 @@ class TXRequest {
         if ($row){
             return $this->method;
         } else {
-            if ($this->action && $this->action->getResful()){
+            if ($this->action && $this->action->getRestful()){
                 if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
                     $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
                 } else {
@@ -260,10 +264,24 @@ class TXRequest {
         }
     }
 
+    /**
+     * 获取header内容
+     * @param $key
+     * @return null
+     */
+    public function header($key)
+    {
+        $key = 'HTTP_'.strtoupper(str_replace('-', '_', $key));
+        return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
+    }
+
+    /**
+     * 判断是否强制返回tpl
+     * @return null
+     */
     public function isShowTpl()
     {
-        $key = 'HTTP_'.$this->config['showTpl'];
-        return isset($_SERVER[$key]);
+        return $this->header($this->config['showTpl']);
     }
 
     /**
@@ -272,7 +290,7 @@ class TXRequest {
      */
     public function isAjax()
     {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+        return $this->header('X_REQUESTED_WITH') === 'XMLHttpRequest';
     }
 
     /**
@@ -427,8 +445,8 @@ class TXRequest {
     public function getUserIP()
     {
         if (isset($this->config['userIP']) && $this->config['userIP']){
-            $header = 'HTTP_'.$this->config['userIP'];
-            return isset($_SERVER[$header]) ? $_SERVER[$header] : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null);
+            $userIP = $this->header($this->config['userIP']);
+            return $userIP ?: (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null);
         } else {
             return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
         }

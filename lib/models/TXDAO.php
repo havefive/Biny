@@ -118,7 +118,7 @@ class TXDAO
      * 执行sql
      * @param $sql
      * @param bool $id
-     * @return bool|int|mysqli_result|string
+     * @return bool|int|\mysqli_result|string
      */
     protected function execute($sql, $id=false) {
         $dns = is_array($this->dbConfig) ? $this->dbConfig[0] : $this->dbConfig;
@@ -159,7 +159,7 @@ class TXDAO
      * 语句执行
      * @param $sql
      * @param $querys
-     * @return bool|int|mysqli_result|string
+     * @return bool|int|\mysqli_result|string
      */
     public function command($sql, $querys=[])
     {
@@ -259,7 +259,8 @@ class TXDAO
         $params = func_get_args();
         $where = isset($params[1]) && $params[1]->get('where') ? " WHERE ".$params[1]->get('where') : "";
         $fields = $this->buildFields($fields, isset($params[1]) ? $params[1]->get('additions') : []);
-        $sql = sprintf("SELECT %s FROM %s%s", $fields, $this->getTable(), $where);
+        $orderBy = $this->buildOrderBy(isset($params[1]) ? $params[1]->get('orderby') : []);
+        $sql = sprintf("SELECT %s FROM %s%s%s", $fields, $this->getTable(), $where, $orderBy);
         TXEvent::trigger(onSql, [$sql]);
         $result = $this->sql($sql, null, TXDatabase::FETCH_TYPE_ONE);
         return $result;
