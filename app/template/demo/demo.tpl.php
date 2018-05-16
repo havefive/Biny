@@ -761,6 +761,34 @@ TXApp::<prm>$base</prm>-><prm>config</prm>-><func>get</func>(<str>'path'</str>, 
 </pre>
         <p>这里运算都为简单运算，需要用到复合运算或者多表运算时，建议使用<code>addition</code>方法</p>
 
+        <p id="update28"><code>==============v2.8更新分割线=============</code></p>
+
+        <p>Biny2.8.1之后添加了<code>pluck</code>（快速拉取列表）具体用法如下：</p>
+<pre class="code"><note>// ['test1', 'test2', 'test3']</note>
+<prm>$list</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>filter</func>(<sys>array</sys>(<str>'type'</str>=>5))-><func>pluck</func>(<str>'name'</str>);
+<note>// 同样也可以运用到多联表中，</note>
+<prm>$filter</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>join</func>(<prm>$this</prm>-><prm>projectDAO</prm>, <sys>array</sys>(<str>'projectId'</str>=><str>'id'</str>))
+    -><func>filter</func>(<sys>array</sys>(
+        <sys>array</sys>(<str>'type'</str>=>5),
+    ));
+<note>// 如果所使用字段在多表中重复会报错</note>
+<prm>$list</prm> = <prm>$filter</prm>-><func>pluck</func>(<str>'name'</str>);
+<note>// 如果所使用字段在多表中重复出现需要指明所属的表</note>
+<prm>$list</prm> = <prm>$filter</prm>-><func>pluck</func>(<sys>array</sys>(<str>'project'</str>=><str>'name'</str>));
+</pre>
+
+        <p>Biny2.8.1之后还添加了<code>paginate</code>（自动分页）方法，具体用法如下：</p>
+<pre class="code"><note>// 返回一个以10条数据为一组的二维数组</note>
+<prm>$results</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>filter</func>(<sys>array</sys>(<str>'type'</str>=>5))-><func>paginate</func>(10);
+<note>// 同样也可以运用到多联表中，</note>
+<prm>$filter</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>join</func>(<prm>$this</prm>-><prm>projectDAO</prm>, <sys>array</sys>(<str>'projectId'</str>=><str>'id'</str>))
+    -><func>filter</func>(<sys>array</sys>(
+        <sys>array</sys>(<str>'type'</str>=>5),
+    ));
+<note>// 第二个参数默认为null，非null返回第n+1页（计数从0开始）的内容</note>
+<note>// 第三个参数等同于fields的用法，为筛选的字段集合</note>
+<prm>$results</prm> = <prm>$filter</prm>-><func>paginate</func>(10, 3, <sys>array</sys>(<sys>array</sys>(<str>'project'</str>=><str>'id'</str>, <str>'name'</str>));
+</pre>
 
         <h2 id="dao-update">删改数据</h2>
         <p>在单表操作中可以用到删改数据方法，包括<code>update</code>（多联表也可），<code>delete</code>，<code>add</code>等</p>
@@ -905,6 +933,13 @@ TXApp::<prm>$base</prm>-><prm>config</prm>-><func>get</func>(<str>'path'</str>, 
     -><func>filter</func>(<sys>array</sys>(<sys>array</sys>(),<sys>array</sys>(<str>'type'</str>=><str>'admin'</str>)))
     -><func>query</func>();</pre>
 
+        <p>另外，如果想实现<code>where start=end</code>或者<code>where start=end+86400</code>这类的条件也是支持的，方法如下：</p>
+        <pre class="code"><note>// ... WHERE `user`.`lastLoginTime` = `user`.`registerTime` and `user`.`lastLoginTime` <= refreshTime+86400</note>
+<prm>$filter</prm> = <prm>$this</prm>-><prm>userDAO</prm>-><func>filter</func>(<sys>array</sys>(
+    <str>'lastLoginTime'</str>=>TXDatabase::<func>field</func>(<str>'`user`.`registerTime`'</str>),
+    <str>'<='</str>=><sys>array</sys>(<str>'lastLoginTime'</str>=>TXDatabase::<func>field</func>(<str>'refreshTime+86400'</str>)),
+));</pre>
+
         <p>无论是<code>filter</code>还是<code>merge</code>，在执行SQL语句前都<code>不会被执行</code>，不会增加sql负担，可以放心使用。</p>
 
         <h2 id="dao-extracts">复杂选择</h2>
@@ -1001,6 +1036,12 @@ TXApp::<prm>$base</prm>-><prm>config</prm>-><func>get</func>(<str>'path'</str>, 
 <note>// 100 (user表总行数)</note>
 <prm>$count</prm> = <prm>$this</prm>-><prm>userDAO</prm>-><func>count</func>()</pre>
 
+        <p>Biny同时也可以使用<code>TXDatabase::field()</code>来支持复杂的<code>Group By</code>语句，例如：</p>
+        <pre class="code"><note>// SELECT FROM_UNIXTIME(time,'%Y-%m-%d') AS time, count(*) AS 'count'
+                FROM `user` Group By FROM_UNIXTIME(time,'%Y-%m-%d')</note>
+<prm>$result</prm> = <prm>$this</prm>-><prm>userDAO</prm>-><func>group</func>(TXDatabase::<func>field</func>(<str>"FROM_UNIXTIME(time,'%Y-%m-%d')"</str>))
+    -><func>addition</func>(<sys>array</sys>(<str>'count'</str>=><str>'*'</str>))
+    -><func>query</func>(<str>"FROM_UNIXTIME(time,'%Y-%m-%d') AS time");</pre>
 
         <h2 id="dao-command">SQL模版</h2>
         <p>框架中提供了上述<code>选择器</code>，<code>条件语句</code>，<code>联表</code>等，基本覆盖了所有sql语法，但可能还有部分生僻的用法无法被实现，
@@ -1043,6 +1084,14 @@ TXApp::<prm>$base</prm>-><prm>config</prm>-><func>get</func>(<str>'path'</str>, 
 <sys>while</sys> (<prm>$data</prm>=TXDatabase::<func>step</func>(<prm>$rs</prm>)){
     <note>do something...</note>
 }</pre>
+        <p>如果在游标数据中需要再使用其他sql语句，则需要在<code>cursor</code>方法中传第二个参数<code>false</code>，否则在cursor未执行完之前其他语句无法执行</p>
+        <pre class="code"><note>// 选择器，条件类模式完全一样，在获取数据时使用cursor方法</note>
+<prm>$rs</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>filter</func>(<sys>array</sys>(<str>'type'</str>=>1))-><func>cursor</func>(<sys>array</sys>(<str>'id'</str>, <str>'name'</str>), <sys>false</sys>);
+<note>// 通过 TXDatabase::step 逐个取出data数据，e.g: ['id'=>2, 'name'=>'test']</note>
+<sys>while</sys> (<prm>$data</prm>=TXDatabase::<func>step</func>(<prm>$rs</prm>)){
+    <note>// other sql...</note>
+    <prm>$count</prm> = <prm>$this</prm>-><prm>testDAO</prm>-><func>count</func>();
+}</pre>
 
         <p>如果使用SQL模版的话，也可以通过传递第三个参数<code>TXDatabase::FETCH_TYPE_CURSOR</code>来实现游标的使用</p>
         <pre class="code"><note>// 使用方法跟上诉方式一样</note>
@@ -1052,6 +1101,15 @@ TXApp::<prm>$base</prm>-><prm>config</prm>-><func>get</func>(<str>'path'</str>, 
 <sys>while</sys> (<prm>$data</prm>=TXDatabase::<func>step</func>(<prm>$rs</prm>)){
     <note>do something...</note>
 }</pre>
+
+        <p>Biny 2.8.2之后<code>cursor</code>第二个参数可传匿名函数function作为数据回调使用，使用方法如下：</p>
+        <pre class="code">
+<prm>$result</prm> = <sys>array</sys>();
+<note>// $data为迭代的数据，$index为索引</note>
+<prm>$this</prm>-><prm>testDAO</prm>-><func>filter</func>(<sys>array</sys>(<str>'type'</str>=>1))
+  -><func>cursor</func>(<str>'*'</str>, <sys>function</sys>(<prm>$data</prm>, <prm>$index</prm>) <sys>use</sys>(&<prm>$result</prm>){
+    <note>do something...</note>
+});</pre>
 
         <h2 id="dao-transaction">事务处理</h2>
         <p>框架为DAO提供了一套简单的事务处理机制，默认是关闭的，可以通过<code>TXDatebase::start()</code>方法开启</p>

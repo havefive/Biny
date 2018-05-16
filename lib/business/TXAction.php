@@ -62,13 +62,14 @@ class TXAction
             parse_str(file_get_contents('php://input'), $this->params);
             $this->params = array_merge($this->params, $_GET);
         } else {
-            $this->params = $_REQUEST;
+            $this->params = array_merge($_REQUEST, TXRouter::$ARGS);
         }
         $this->posts = $_POST;
         $this->gets = $_GET;
         //判断是否维护中
         if (isMaintenance){
-            return $this->display('Main/maintenance');
+            echo $this->display('Main/maintenance');
+            exit;
         }
         if ($this->csrfValidate && !TXApp::$base->request->validateCsrfToken()){
             header(TXApp::$base->config->get(401, 'http'));
